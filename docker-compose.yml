@@ -1,0 +1,15 @@
+services:
+  Postgres:
+    image: postgres:15
+    container_name: ticket_postgres
+    environment:
+      POSTGRES_DB: ticketdb
+      POSTGRES_USER: ticketuser
+      POSTGRES_PASSWORD: ticketpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - ticket_pg_data:/var/lib/postgresql/data
+
+volumes:
+  ticket_pg_data:
