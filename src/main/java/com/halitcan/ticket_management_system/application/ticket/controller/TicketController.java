@@ -2,7 +2,7 @@ package com.halitcan.ticket_management_system.application.ticket.controller;
 
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTicketRequest;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
-import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
+import com.halitcan.ticket_management_system.application.ticket.service.impl.TicketServiceImpl;
 import com.halitcan.ticket_management_system.common.api.ApiResponse;
 
 import jakarta.validation.Valid;
@@ -16,16 +16,16 @@ import java.util.UUID;
 @RequestMapping("/api/v1/tickets")
 public class TicketController {
 
-    private final TicketService ticketService;
+    private final TicketServiceImpl ticketServiceImpl;
 
-    public TicketController(TicketService ticketService) {
-        this.ticketService = ticketService;
+    public TicketController(TicketServiceImpl ticketServiceImpl) {
+        this.ticketServiceImpl = ticketServiceImpl;
     }
 
     // CREATE
     @PostMapping
     public ResponseEntity<ApiResponse<TicketResponse>> create(@Valid @RequestBody CreateTicketRequest request) {
-        TicketResponse created = ticketService.create(request);
+        TicketResponse created = ticketServiceImpl.create(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(created, null));
@@ -34,7 +34,7 @@ public class TicketController {
     // GET BY PUBLIC ID
     @GetMapping("/{publicId}")
     public ResponseEntity<ApiResponse<TicketResponse>> getByPublicId(@PathVariable UUID publicId) {
-        TicketResponse ticket = ticketService.getByPublicId(publicId);
+        TicketResponse ticket = ticketServiceImpl.getByPublicId(publicId);
         return ResponseEntity
                 .ok(ApiResponse.ok(ticket, null));
     }
