@@ -70,27 +70,49 @@
         </dependency>
 
         <!-- SECURITY -->
+
         <dependency>
+
             <groupId>org.springframework.boot</groupId>
+
             <artifactId>spring-boot-starter-security</artifactId>
+
             <exclusions>
+
                 <exclusion>
+
                     <groupId>org.springframework.boot</groupId>
+
                     <artifactId>spring-boot-starter-logging</artifactId>
+
                 </exclusion>
+
             </exclusions>
+
         </dependency>
 
+
+
         <!-- OAUTH2 -->
+
         <dependency>
+
             <groupId>org.springframework.boot</groupId>
+
             <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+
             <exclusions>
+
                 <exclusion>
+
                     <groupId>org.springframework.boot</groupId>
+
                     <artifactId>spring-boot-starter-logging</artifactId>
+
                 </exclusion>
+
             </exclusions>
+
         </dependency>
 
         <!-- VALIDATION -->

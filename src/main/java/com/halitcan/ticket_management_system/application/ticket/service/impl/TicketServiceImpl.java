@@ -2,7 +2,7 @@ package com.halitcan.ticket_management_system.application.ticket.service.impl;
 
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTicketRequest;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
-import com.halitcan.ticket_management_system.application.ticket.service.TicketService; // <-- Arayüzü import etmen gerekebilir
+import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
 import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
@@ -64,7 +64,7 @@ public class TicketServiceImpl implements TicketService {
     @Transactional(readOnly = true)
     public TicketEntity getTicketByPublicId(UUID publicId) {
         return ticketRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new IllegalArgumentException("Ticket not found: " + publicId));
+                .orElseThrow(() -> new com.halitcan.ticket_management_system.domain.ticket.exception.TicketNotFoundException(publicId));
     }
 
     private TicketResponse toResponse(TicketEntity t) {
