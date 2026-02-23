@@ -121,4 +121,33 @@ public class TicketServiceImpl implements TicketService {
                 entityPage.getTotalPages()
         );
     }
+    @Override
+    @Transactional
+    public TicketResponse updateTicketStatus(UUID publicId, TicketStatus newStatus, UUID assigneeId) {
+        TicketEntity ticket = getTicketByPublicId(publicId);
+
+        //Kapatılmış (CLOSED) bir biletin durumu tekrar değiştirilemez.
+        if (ticket.getStatus() == TicketStatus.CLOSED) {
+            throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
+                    "Kapatılmış bir bilet üzerinde işlem yapılamaz.");
+        }
+
+        //Bilet 'Çözüldü' (RESOLVED) yapılacaksa, bir yetkiliye atanmış olmak zorundadır.
+        if (newStatus == TicketStatus.RESOLVED) {
+            boolean hasAssignee = ticket.getAssigneeId() != null || assigneeId != null;
+            if (!hasAssignee) {
+                throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
+                        "Bilet teknik bir personele atanmadan 'Çözüldü' durumuna getirilemez.");
+            }
+        }
+
+        ticket.setStatus(newStatus);
+
+        if (assigneeId != null) {
+            ticket.setAssigneeId(assigneeId);
+        }
+
+        TicketEntity updatedTicket = ticketRepository.save(ticket);
+        return toResponse(updatedTicket);
+    }
 }

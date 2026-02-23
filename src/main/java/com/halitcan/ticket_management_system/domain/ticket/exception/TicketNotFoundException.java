@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public class TicketNotFoundException extends NotFoundException {
     public TicketNotFoundException(UUID publicId){
-        super("Bilet Bulunamadı: " + publicId );
+        super("Sistemde böyle bir bilet bulunamadı. ID: " + publicId, "TICKET_NOT_FOUND");
     }
-}
+    }
+

@@ -2,6 +2,7 @@ package com.halitcan.ticket_management_system.application.ticket.controller;
 
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTicketRequest;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
+import com.halitcan.ticket_management_system.application.ticket.dto.api.UpdateTicketStatusRequest;
 import com.halitcan.ticket_management_system.application.ticket.service.impl.TicketServiceImpl;
 import com.halitcan.ticket_management_system.common.api.ApiResponse;
 import com.halitcan.ticket_management_system.common.api.PaginatedData;
@@ -64,5 +65,20 @@ public class TicketController {
 
         PaginatedData<TicketResponse> result = ticketServiceImpl.listMyTickets(currentUserId, page, size, status, priority);
         return ResponseEntity.ok(ApiResponse.ok(result, null));
+    }
+
+    @PatchMapping("/{publicId}/status")
+    @Operation(summary = "Bilet Durumunu Güncelle", description = "Biletin durumunu (Status) ve atanmış kişisini (Assignee) iş kurallarına göre günceller.")
+    public ResponseEntity<ApiResponse<TicketResponse>> updateStatus(
+            @PathVariable UUID publicId,
+            @Valid @RequestBody UpdateTicketStatusRequest request) {
+
+        TicketResponse updatedTicket = ticketServiceImpl.updateTicketStatus(
+                publicId,
+                request.status(),
+                request.assigneeId()
+        );
+
+        return ResponseEntity.ok(ApiResponse.ok(updatedTicket, null));
     }
 }
