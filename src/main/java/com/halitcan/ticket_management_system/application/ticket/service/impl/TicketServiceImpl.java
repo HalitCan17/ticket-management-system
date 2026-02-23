@@ -3,10 +3,13 @@ package com.halitcan.ticket_management_system.application.ticket.service.impl;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTicketRequest;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
 import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
+import com.halitcan.ticket_management_system.common.api.PaginatedData;
 import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
 import com.halitcan.ticket_management_system.infrastructure.persistence.TicketRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,6 +77,48 @@ public class TicketServiceImpl implements TicketService {
                 t.getDescription(),
                 t.getStatus(),
                 t.getPriority()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedData<TicketResponse> listTickets(int page, int size, TicketStatus status, TicketPriority priority) {
+
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        org.springframework.data.domain.Page<TicketEntity> entityPage = ticketRepository.findWithFilters(status, priority, pageRequest);
+
+        java.util.List<TicketResponse> dtoList = entityPage.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PaginatedData<>(
+                dtoList,
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedData<TicketResponse> listMyTickets(UUID requesterId, int page, int size, TicketStatus status, TicketPriority priority) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        org.springframework.data.domain.Page<TicketEntity> entityPage =
+                ticketRepository.findByRequesterIdWithFilters(requesterId, status, priority, pageRequest);
+
+        java.util.List<TicketResponse> dtoList = entityPage.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PaginatedData<>(
+                dtoList,
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages()
         );
     }
 }
