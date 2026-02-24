@@ -3,9 +3,10 @@ package com.halitcan.ticket_management_system.application.ticket.service.impl;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CommentRequest;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CommentResponse;
 import com.halitcan.ticket_management_system.application.ticket.service.CommentService;
-import com.halitcan.ticket_management_system.common.exception.ResourceNotFoundException;
 import com.halitcan.ticket_management_system.domain.ticket.entity.CommentEntity;
 import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
+import com.halitcan.ticket_management_system.domain.ticket.exception.CommentNotFoundException;
+import com.halitcan.ticket_management_system.domain.ticket.exception.TicketNotFoundException;
 import com.halitcan.ticket_management_system.infrastructure.persistence.CommentRepository;
 import com.halitcan.ticket_management_system.infrastructure.persistence.TicketRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +28,12 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse addComment(UUID ticketPublicId, CommentRequest request) {
         TicketEntity ticket = ticketRepository.findByPublicId(ticketPublicId)
-                .orElseThrow(() -> new TicketNotFound   ("İlgili bilet bulunamadı: " + ticketPublicId));
+                .orElseThrow(() -> new TicketNotFoundException(ticketPublicId));
 
         CommentEntity parentComment = null;
         if (request.parentPublicId() != null) {
             parentComment = commentRepository.findByPublicId(request.parentPublicId())
-                    .orElseThrow(() -> new CommentNotFound("Yanıtlanmak istenen üst yorum bulunamadı."));
+                    .orElseThrow(() -> new CommentNotFoundException("Yanıtlanmak istenen üst yorum bulunamadı."));
         }
 
         CommentEntity comment = CommentEntity.builder()

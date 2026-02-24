@@ -4,6 +4,7 @@ import com.halitcan.ticket_management_system.application.ticket.dto.api.CommentR
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CommentResponse;
 import com.halitcan.ticket_management_system.application.ticket.service.CommentService;
 import com.halitcan.ticket_management_system.common.api.ApiResponse; // ApiResponse yerin doğru mu kontrol et
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/tickets/{ticketPublicId}/comments")
+@Tag(name = "Yorum (Comment) Yönetimi", description = "Biletlere yorum ekleme, yanıtlama ve listeleme işlemleri")
 @RequiredArgsConstructor
 public class CommentController {
 

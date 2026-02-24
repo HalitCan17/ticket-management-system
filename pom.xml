@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.2</version>
+        <version>4.0.2</version>
     </parent>
 
     <groupId>com.halitcan</groupId>
@@ -22,21 +22,10 @@
     <dependencies>
 
         <!-- ACTUATOR -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
-        <!-- WEB -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -71,49 +60,49 @@
 
         <!-- SECURITY -->
 
-<!--        <dependency>-->
+        <!--        <dependency>-->
 
-<!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
 
-<!--            <artifactId>spring-boot-starter-security</artifactId>-->
+        <!--            <artifactId>spring-boot-starter-security</artifactId>-->
 
-<!--            <exclusions>-->
+        <!--            <exclusions>-->
 
-<!--                <exclusion>-->
+        <!--                <exclusion>-->
 
-<!--                    <groupId>org.springframework.boot</groupId>-->
+        <!--                    <groupId>org.springframework.boot</groupId>-->
 
-<!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
+        <!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
 
-<!--                </exclusion>-->
+        <!--                </exclusion>-->
 
-<!--            </exclusions>-->
+        <!--            </exclusions>-->
 
-<!--        </dependency>-->
+        <!--        </dependency>-->
 
 
 
-<!--        &lt;!&ndash; OAUTH2 &ndash;&gt;-->
+        <!--        &lt;!&ndash; OAUTH2 &ndash;&gt;-->
 
-<!--        <dependency>-->
+        <!--        <dependency>-->
 
-<!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
 
-<!--            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>-->
+        <!--            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>-->
 
-<!--            <exclusions>-->
+        <!--            <exclusions>-->
 
-<!--                <exclusion>-->
+        <!--                <exclusion>-->
 
-<!--                    <groupId>org.springframework.boot</groupId>-->
+        <!--                    <groupId>org.springframework.boot</groupId>-->
 
-<!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
+        <!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
 
-<!--                </exclusion>-->
+        <!--                </exclusion>-->
 
-<!--            </exclusions>-->
+        <!--            </exclusions>-->
 
-<!--        </dependency>-->
+        <!--        </dependency>-->
 
         <!-- VALIDATION -->
         <dependency>
@@ -127,13 +116,13 @@
             </exclusions>
         </dependency>
 
-        <!-- LOG4J2
+        <!-- LOG4J2-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-        <!- JSON LOG FORMAT -->
+        <!-- JSON LOG FORMAT -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-layout-template-json</artifactId>

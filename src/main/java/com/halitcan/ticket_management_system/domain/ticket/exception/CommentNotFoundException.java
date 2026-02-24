@@ -4,6 +4,6 @@ import com.halitcan.ticket_management_system.domain.exception.NotFoundException;
 
 public class CommentNotFoundException extends NotFoundException {
     public CommentNotFoundException(String message) {
-        super(message);
+        super(message,"COMMENT_NOT_FOUND");
     }
 }
