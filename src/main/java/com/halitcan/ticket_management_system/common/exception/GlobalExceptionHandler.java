@@ -55,4 +55,15 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail(error));
     }
+
+    // 4. Kaynak Bulunamadı Hataları (REST 404)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
+
+        ApiError error = ApiError.of("RESOURCE_NOT_FOUND", ex.getMessage());
+
+        log.warn("İstenen kaynak bulunamadı: {} - traceId: {}", ex.getMessage(), Trace.id());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(error));
+    }
 }
