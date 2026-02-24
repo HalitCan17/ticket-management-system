@@ -30,14 +30,14 @@ public class TicketController {
     @Operation(summary = "Yeni Bilet Oluştur", description = "Sisteme yeni bir destek bileti kaydeder.")
     public ResponseEntity<ApiResponse<TicketResponse>> create(@Valid @RequestBody CreateTicketRequest request) {
         TicketResponse created = ticketServiceImpl.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(created, null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(created));
     }
 
     @GetMapping("/{publicId}")
     @Operation(summary = "Bilet Detayı Getir", description = "Verilen benzersiz ID'ye (UUID) göre biletin detaylarını getirir.")
     public ResponseEntity<ApiResponse<TicketResponse>> getByPublicId(@PathVariable UUID publicId) {
         TicketResponse ticket = ticketServiceImpl.getByPublicId(publicId);
-        return ResponseEntity.ok(ApiResponse.ok(ticket, null));
+        return ResponseEntity.ok(ApiResponse.ok(ticket));
     }
 
     @GetMapping
@@ -49,7 +49,7 @@ public class TicketController {
             @RequestParam(required = false) com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority priority
     ) {
         PaginatedData<TicketResponse> result = ticketServiceImpl.listTickets(page, size, status, priority);
-        return ResponseEntity.ok(ApiResponse.ok(result, null));
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @GetMapping("/my")
@@ -64,7 +64,7 @@ public class TicketController {
         UUID currentUserId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 
         PaginatedData<TicketResponse> result = ticketServiceImpl.listMyTickets(currentUserId, page, size, status, priority);
-        return ResponseEntity.ok(ApiResponse.ok(result, null));
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
     @PatchMapping("/{publicId}/status")
@@ -79,6 +79,6 @@ public class TicketController {
                 request.assigneeId()
         );
 
-        return ResponseEntity.ok(ApiResponse.ok(updatedTicket, null));
+        return ResponseEntity.ok(ApiResponse.ok(updatedTicket));
     }
 }

@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         ApiError error = ApiError.of(ex.getErrorCode(), ex.getMessage());
         log.warn("İş kuralı hatası: {} - traceId: {}", ex.getMessage(), Trace.id());
 
-        return ResponseEntity.status(status).body(ApiResponse.fail(error, Trace.id()));
+        return ResponseEntity.status(status).body(ApiResponse.fail(error));
     }
 
     // 2. Validasyon Hataları
@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
         ApiError error = ApiError.validation(fieldErrors);
         log.warn("Validasyon hatası alındı - traceId: {}", Trace.id());
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(error, Trace.id()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(error));
     }
 
     // 3. Beklenmedik Sistem Hataları
@@ -53,6 +53,6 @@ public class GlobalExceptionHandler {
         // Kritik hatalarda stack trace OpenSearch'e gitsin diye log.error
         log.error("KRİTİK HATA: traceId: {}", Trace.id(), ex);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail(error, Trace.id()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail(error));
     }
 }

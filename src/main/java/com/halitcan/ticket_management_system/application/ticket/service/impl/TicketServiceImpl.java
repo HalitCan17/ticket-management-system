@@ -76,7 +76,9 @@ public class TicketServiceImpl implements TicketService {
                 t.getTitle(),
                 t.getDescription(),
                 t.getStatus(),
-                t.getPriority()
+                t.getPriority(),
+                t.getCreatedAt(),
+                t.getAssigneeId()
         );
     }
 
