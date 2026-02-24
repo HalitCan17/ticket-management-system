@@ -27,13 +27,20 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentResponse addComment(UUID ticketPublicId, CommentRequest request) {
         TicketEntity ticket = ticketRepository.findByPublicId(ticketPublicId)
-                .orElseThrow(() -> new ResourceNotFoundException("İlgili bilet bulunamadı: " + ticketPublicId));
+                .orElseThrow(() -> new TicketNotFound   ("İlgili bilet bulunamadı: " + ticketPublicId));
+
+        CommentEntity parentComment = null;
+        if (request.parentPublicId() != null) {
+            parentComment = commentRepository.findByPublicId(request.parentPublicId())
+                    .orElseThrow(() -> new CommentNotFound("Yanıtlanmak istenen üst yorum bulunamadı."));
+        }
 
         CommentEntity comment = CommentEntity.builder()
                 .content(request.content())
                 .authorId(request.authorId())
                 .isInternal(request.isInternal())
                 .ticket(ticket)
+                .parent(parentComment)
                 .build();
 
         CommentEntity savedComment = commentRepository.save(comment);
