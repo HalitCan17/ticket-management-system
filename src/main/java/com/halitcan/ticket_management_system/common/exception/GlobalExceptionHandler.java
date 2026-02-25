@@ -66,4 +66,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(error));
     }
+    // 5. Dosya Boyutu Sınırı Hatası
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSizeExceeded(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+
+        String message = "Yüklemeye çalıştığınız dosya çok büyük. Maksimum izin verilen sınırı (5MB) aştınız.";
+
+        ApiError error = ApiError.of("FILE_TOO_LARGE", message);
+
+        log.warn("Dosya boyutu sınırı aşıldı - traceId: {}", Trace.id());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(error));
+    }
 }
