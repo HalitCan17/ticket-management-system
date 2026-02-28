@@ -29,8 +29,6 @@ public class TraceFilter implements Filter {
 
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.setHeader("X-Trace-Id", traceId);
-
-            // ✅ Burada contextMap içinde traceId görünmeli
             log.info("TraceFilter triggered, traceId={}", traceId);
 
             chain.doFilter(request, response);
