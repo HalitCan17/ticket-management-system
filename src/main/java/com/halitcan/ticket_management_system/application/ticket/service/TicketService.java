@@ -15,7 +15,7 @@ public interface TicketService {
 
     TicketResponse getByPublicId(UUID publicId);
 
-    TicketEntity createTicket(UUID requesterId, String title, String description, TicketPriority priority);
+    TicketEntity createTicket(UUID requesterId,UUID productId, String title, String description, TicketPriority priority);
 
     TicketEntity getTicketByPublicId(UUID publicId);
 
