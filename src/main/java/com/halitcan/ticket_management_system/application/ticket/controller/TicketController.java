@@ -55,15 +55,14 @@ public class TicketController {
     @GetMapping("/my")
     @Operation(summary = "Kendi Biletlerimi Listele", description = "Sisteme giriş yapmış müşterinin kendi oluşturduğu biletleri listeler.")
     public ResponseEntity<ApiResponse<PaginatedData<TicketResponse>>> getMyTickets(
+            @RequestParam UUID requesterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus status,
             @RequestParam(required = false) com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority priority
     ) {
-        // TODO: SecurityContext entegre edildiğinde bu sabit UUID kaldırılacak.
-        UUID currentUserId = UUID.fromString("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 
-        PaginatedData<TicketResponse> result = ticketServiceImpl.listMyTickets(currentUserId, page, size, status, priority);
+        PaginatedData<TicketResponse> result = ticketServiceImpl.listMyTickets(requesterId, page, size, status, priority);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 

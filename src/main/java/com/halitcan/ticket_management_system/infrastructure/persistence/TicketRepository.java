@@ -1,7 +1,6 @@
 package com.halitcan.ticket_management_system.infrastructure.persistence;
 
 import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
-import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
 import org.springframework.data.domain.Page;
@@ -24,7 +23,7 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Long> {
                                        @Param("priority") TicketPriority priority,
                                        Pageable pageable);
 
-    @Query("SELECT t FROM TicketEntity t WHERE t.requesterId = :requesterId AND " +
+    @Query("SELECT t FROM TicketEntity t WHERE t.requester.id = :requesterId AND " +
             "(:status IS NULL OR t.status = :status) AND " +
             "(:priority IS NULL OR t.priority = :priority)")
     Page<TicketEntity> findByRequesterIdWithFilters(@Param("requesterId") UUID requesterId,

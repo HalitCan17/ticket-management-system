@@ -5,9 +5,13 @@ import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketRe
 import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
 import com.halitcan.ticket_management_system.common.api.PaginatedData;
 import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
+import com.halitcan.ticket_management_system.domain.ticket.entity.UserEntity;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
 import com.halitcan.ticket_management_system.infrastructure.persistence.TicketRepository;
+import com.halitcan.ticket_management_system.infrastructure.persistence.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -16,13 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
-
-    public TicketServiceImpl(TicketRepository ticketRepository) {
-        this.ticketRepository = ticketRepository;
-    }
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -49,16 +51,18 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @Transactional
     public TicketEntity createTicket(UUID requesterId, String title, String description, TicketPriority priority) {
-        TicketEntity ticket = new TicketEntity();
+        UserEntity requester = userRepository.findById(requesterId)
+                .orElseThrow(() -> new EntityNotFoundException("Kullanıcı bulunamadı: " + requesterId));
 
+        TicketEntity ticket = new TicketEntity();
         ticket.setPublicId(UUID.randomUUID());
-        ticket.setRequesterId(requesterId);
+
+        ticket.setRequester(requester);
 
         ticket.setTitle(title);
         ticket.setDescription(description);
-
         ticket.setPriority(priority);
-        ticket.setStatus(TicketStatus.OPEN);
+        ticket.setStatus(TicketStatus.NEW);
 
         return ticketRepository.save(ticket);
     }
@@ -78,29 +82,21 @@ public class TicketServiceImpl implements TicketService {
                 t.getStatus(),
                 t.getPriority(),
                 t.getCreatedAt(),
-                t.getAssigneeId()
+                t.getAssignee() != null ? t.getAssignee().getId() : null // Güvenli null kontrolü
         );
     }
 
     @Override
     @Transactional(readOnly = true)
     public PaginatedData<TicketResponse> listTickets(int page, int size, TicketStatus status, TicketPriority priority) {
-
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-
         org.springframework.data.domain.Page<TicketEntity> entityPage = ticketRepository.findWithFilters(status, priority, pageRequest);
 
         java.util.List<TicketResponse> dtoList = entityPage.getContent().stream()
                 .map(this::toResponse)
                 .toList();
 
-        return new PaginatedData<>(
-                dtoList,
-                entityPage.getNumber(),
-                entityPage.getSize(),
-                entityPage.getTotalElements(),
-                entityPage.getTotalPages()
-        );
+        return new PaginatedData<>(dtoList, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
     }
 
     @Override
@@ -115,40 +111,33 @@ public class TicketServiceImpl implements TicketService {
                 .map(this::toResponse)
                 .toList();
 
-        return new PaginatedData<>(
-                dtoList,
-                entityPage.getNumber(),
-                entityPage.getSize(),
-                entityPage.getTotalElements(),
-                entityPage.getTotalPages()
-        );
+        return new PaginatedData<>(dtoList, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
     }
+
     @Override
     @Transactional
     public TicketResponse updateTicketStatus(UUID publicId, TicketStatus newStatus, UUID assigneeId) {
         TicketEntity ticket = getTicketByPublicId(publicId);
 
-        //Kapatılmış (CLOSED) bir biletin durumu tekrar değiştirilemez.
         if (ticket.getStatus() == TicketStatus.CLOSED) {
             throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
                     "Kapatılmış bir bilet üzerinde işlem yapılamaz.");
         }
 
-        //Bilet 'Çözüldü' (RESOLVED) yapılacaksa, bir yetkiliye atanmış olmak zorundadır.
+        if (assigneeId != null) {
+            UserEntity assignee = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new EntityNotFoundException("Atanacak personel bulunamadı: " + assigneeId));
+            ticket.setAssignee(assignee);
+        }
+
         if (newStatus == TicketStatus.RESOLVED) {
-            boolean hasAssignee = ticket.getAssigneeId() != null || assigneeId != null;
-            if (!hasAssignee) {
+            if (ticket.getAssignee() == null) {
                 throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
                         "Bilet teknik bir personele atanmadan 'Çözüldü' durumuna getirilemez.");
             }
         }
 
         ticket.setStatus(newStatus);
-
-        if (assigneeId != null) {
-            ticket.setAssigneeId(assigneeId);
-        }
-
         TicketEntity updatedTicket = ticketRepository.save(ticket);
         return toResponse(updatedTicket);
     }

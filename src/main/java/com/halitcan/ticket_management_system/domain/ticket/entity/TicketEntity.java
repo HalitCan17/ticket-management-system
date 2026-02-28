@@ -42,11 +42,13 @@ public class TicketEntity {
     @Column(name = "priority", nullable = false, length = 30)
     private TicketPriority priority;
 
-    @Column(name = "requester_id", nullable = false)
-    private UUID requesterId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requester_id", nullable = false)
+    private UserEntity requester;
 
-    @Column(name = "assignee_id")
-    private UUID assigneeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id")
+    private UserEntity assignee;
 
     @Version
     @Column(name = "version", nullable = false)

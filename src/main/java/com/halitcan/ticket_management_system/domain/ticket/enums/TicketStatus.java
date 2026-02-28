@@ -1,8 +1,10 @@
 package com.halitcan.ticket_management_system.domain.ticket.enums;
 
 public enum TicketStatus {
-    OPEN,
+    NEW,
     IN_PROGRESS,
+    WAITING_FOR_CUSTOMER,
     RESOLVED,
-    CLOSED
+    CLOSED,
+
 }
