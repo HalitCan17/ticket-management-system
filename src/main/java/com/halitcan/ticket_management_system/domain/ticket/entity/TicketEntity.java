@@ -62,6 +62,21 @@ public class TicketEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "first_response_due_at")
+    private Instant firstResponseDueAt;
+
+    @Column(name = "resolution_due_at")
+    private Instant resolutionDueAt;
+
+    @Column(name = "first_response_at")
+    private Instant firstResponseAt;
+
+    @Column(name = "resolved_at")
+    private Instant resolvedAt;
+
+    @Column(name = "sla_breached", nullable = false)
+    private boolean slaBreached = false;
+
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
     private List<CommentEntity> comments = new ArrayList<>();

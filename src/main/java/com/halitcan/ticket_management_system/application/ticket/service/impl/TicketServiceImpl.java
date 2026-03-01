@@ -4,11 +4,13 @@ import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTi
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
 import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
 import com.halitcan.ticket_management_system.common.api.PaginatedData;
+import com.halitcan.ticket_management_system.domain.ticket.entity.SlaPolicyEntity;
 import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
 import com.halitcan.ticket_management_system.domain.ticket.entity.UserEntity;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
 import com.halitcan.ticket_management_system.infrastructure.persistence.ProductRepository;
+import com.halitcan.ticket_management_system.infrastructure.persistence.SlaPolicyRepository;
 import com.halitcan.ticket_management_system.infrastructure.persistence.TicketRepository;
 import com.halitcan.ticket_management_system.infrastructure.persistence.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -27,6 +31,7 @@ public class TicketServiceImpl implements TicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final SlaPolicyRepository slaPolicyRepository;
 
     @Override
     @Transactional
@@ -69,6 +74,15 @@ public class TicketServiceImpl implements TicketService {
         ticket.setDescription(description);
         ticket.setPriority(priority);
         ticket.setStatus(TicketStatus.NEW);
+
+        SlaPolicyEntity slaPolicy = slaPolicyRepository.findByPriority(priority)
+                .orElseThrow(() -> new IllegalStateException("SLA Politikası bulunamadı: " + priority));
+
+        Instant now = Instant.now();
+
+        ticket.setFirstResponseDueAt(now.plus(slaPolicy.getResponseTimeHours(), ChronoUnit.HOURS));
+        ticket.setResolutionDueAt(now.plus(slaPolicy.getResolutionTimeHours(), ChronoUnit.HOURS));
+        ticket.setSlaBreached(false);
 
         return ticketRepository.save(ticket);
     }

@@ -7,6 +7,5 @@ import java.util.UUID;
 public record UpdateTicketStatusRequest(
         @NotNull(message = "Yeni durum (status) boş bırakılamaz.")
         TicketStatus status,
-
         UUID assigneeId
 ) {}
