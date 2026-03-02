@@ -15,5 +15,8 @@ public record TicketResponse(
         Instant createdAt,
         UUID assigneeId,
         UUID productId,
-        Instant firstResponseAt
+        Instant firstResponseAt,
+        Instant firstResponseDueAt,
+        Instant resolutionDueAt,
+        Boolean slaBreached
 ) {}

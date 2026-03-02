@@ -84,4 +84,6 @@ public class TicketEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private ProductEntity product;
+
+
 }

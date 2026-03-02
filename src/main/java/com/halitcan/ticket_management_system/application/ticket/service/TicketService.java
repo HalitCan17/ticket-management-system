@@ -15,10 +15,6 @@ public interface TicketService {
 
     TicketResponse getByPublicId(UUID publicId);
 
-    TicketEntity createTicket(UUID requesterId,UUID productId, String title, String description, TicketPriority priority);
-
-    TicketEntity getTicketByPublicId(UUID publicId);
-
     PaginatedData<TicketResponse> listTickets(int page, int size, TicketStatus status, TicketPriority priority);
 
     PaginatedData<TicketResponse> listMyTickets(UUID requesterId, int page, int size, TicketStatus status, TicketPriority priority);

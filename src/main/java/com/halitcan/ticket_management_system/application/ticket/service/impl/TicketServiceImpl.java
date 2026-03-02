@@ -15,6 +15,7 @@ import com.halitcan.ticket_management_system.infrastructure.persistence.TicketRe
 import com.halitcan.ticket_management_system.infrastructure.persistence.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
@@ -32,6 +34,7 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final SlaPolicyRepository slaPolicyRepository;
+    private static final java.util.List<TicketStatus> POOL_STATUSES = java.util.List.of(TicketStatus.NEW, TicketStatus.IN_PROGRESS);
 
     @Override
     @Transactional
@@ -56,9 +59,7 @@ public class TicketServiceImpl implements TicketService {
         return toResponse(ticket);
     }
 
-    @Override
-    @Transactional
-    public TicketEntity createTicket(UUID requesterId, UUID productId, String title, String description, TicketPriority priority) {
+    private TicketEntity createTicket(UUID requesterId, UUID productId, String title, String description, TicketPriority priority) {
         UserEntity requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new EntityNotFoundException("Kullanıcı bulunamadı: " + requesterId));
 
@@ -87,7 +88,7 @@ public class TicketServiceImpl implements TicketService {
         return ticketRepository.save(ticket);
     }
 
-    @Override
+
     @Transactional(readOnly = true)
     public TicketEntity getTicketByPublicId(UUID publicId) {
         return ticketRepository.findByPublicId(publicId)
@@ -104,7 +105,10 @@ public class TicketServiceImpl implements TicketService {
                 t.getCreatedAt(),
                 t.getAssignee() != null ? t.getAssignee().getId() : null,
                 t.getProduct() !=null? t.getProduct().getId() :null,
-                t.getFirstResponseAt()
+                t.getFirstResponseAt(),
+                t.getFirstResponseDueAt(),
+                t.getResolutionDueAt(),
+                t.isSlaBreached()
         );
     }
 
@@ -141,9 +145,10 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponse updateTicketStatus(UUID publicId, TicketStatus newStatus, UUID assigneeId) {
         TicketEntity ticket = getTicketByPublicId(publicId);
 
-        if (ticket.getStatus() == TicketStatus.CLOSED) {
+        if ((ticket.getStatus() == TicketStatus.CLOSED || ticket.getStatus() == TicketStatus.RESOLVED)
+                && (newStatus == TicketStatus.NEW || newStatus == TicketStatus.IN_PROGRESS)) {
             throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
-                    "Kapatılmış bir bilet üzerinde işlem yapılamaz.");
+                    "Kapanmış veya çözülmüş bir bilet, Yeni veya İşlemde statüsüne alınamaz.");
         }
 
         if (assigneeId != null) {
@@ -169,10 +174,8 @@ public class TicketServiceImpl implements TicketService {
     public PaginatedData<TicketResponse> listPoolTickets(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        java.util.List<TicketStatus> poolStatuses = java.util.List.of(TicketStatus.NEW, TicketStatus.IN_PROGRESS);
-
         org.springframework.data.domain.Page<TicketEntity> entityPage =
-                ticketRepository.findPoolTickets(poolStatuses, pageRequest);
+                ticketRepository.findPoolTickets(POOL_STATUSES, pageRequest);
 
         java.util.List<TicketResponse> dtoList = entityPage.getContent().stream()
                 .map(this::toResponse)
