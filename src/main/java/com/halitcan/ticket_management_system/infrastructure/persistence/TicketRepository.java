@@ -30,4 +30,11 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Long> {
                                                     @Param("status") TicketStatus status,
                                                     @Param("priority") TicketPriority priority,
                                                     Pageable pageable);
+
+
+    @Query("SELECT t FROM TicketEntity t WHERE t.assignee IS NULL AND t.status IN :statuses")
+    org.springframework.data.domain.Page<TicketEntity> findPoolTickets(
+            @org.springframework.data.repository.query.Param("statuses") java.util.List<com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus> statuses,
+            org.springframework.data.domain.Pageable pageable
+    );
 }

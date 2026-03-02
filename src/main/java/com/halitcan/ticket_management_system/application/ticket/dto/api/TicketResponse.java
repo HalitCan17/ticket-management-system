@@ -14,5 +14,6 @@ public record TicketResponse(
         TicketPriority priority,
         Instant createdAt,
         UUID assigneeId,
-        UUID productId
+        UUID productId,
+        Instant firstResponseAt
 ) {}

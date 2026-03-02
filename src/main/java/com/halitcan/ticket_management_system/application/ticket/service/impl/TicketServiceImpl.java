@@ -103,7 +103,8 @@ public class TicketServiceImpl implements TicketService {
                 t.getPriority(),
                 t.getCreatedAt(),
                 t.getAssignee() != null ? t.getAssignee().getId() : null,
-                t.getProduct() !=null? t.getProduct().getId() :null
+                t.getProduct() !=null? t.getProduct().getId() :null,
+                t.getFirstResponseAt()
         );
     }
 
@@ -161,5 +162,51 @@ public class TicketServiceImpl implements TicketService {
         ticket.setStatus(newStatus);
         TicketEntity updatedTicket = ticketRepository.save(ticket);
         return toResponse(updatedTicket);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginatedData<TicketResponse> listPoolTickets(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        java.util.List<TicketStatus> poolStatuses = java.util.List.of(TicketStatus.NEW, TicketStatus.IN_PROGRESS);
+
+        org.springframework.data.domain.Page<TicketEntity> entityPage =
+                ticketRepository.findPoolTickets(poolStatuses, pageRequest);
+
+        java.util.List<TicketResponse> dtoList = entityPage.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PaginatedData<>(dtoList, entityPage.getNumber(), entityPage.getSize(),
+                entityPage.getTotalElements(), entityPage.getTotalPages());
+    }
+
+    @Override
+    @Transactional
+    public TicketResponse claimTicket(UUID publicId, UUID assigneeId) {
+        TicketEntity ticket = getTicketByPublicId(publicId);
+
+        if (ticket.getAssignee() != null) {
+            throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
+                    "Bu bilet zaten başka bir personele atanmış. Sahiplenilemez.");
+        }
+
+        if (ticket.getStatus() == TicketStatus.CLOSED || ticket.getStatus() == TicketStatus.RESOLVED) {
+            throw new com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException(
+                    "Kapatılmış veya çözülmüş biletler sahiplenilemez.");
+        }
+
+        UserEntity assignee = userRepository.findById(assigneeId)
+                .orElseThrow(() -> new EntityNotFoundException("Personel bulunamadı: " + assigneeId));
+
+        ticket.setAssignee(assignee);
+        ticket.setStatus(TicketStatus.IN_PROGRESS);
+
+        if (ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(Instant.now());
+        }
+
+        return toResponse(ticketRepository.save(ticket));
     }
 }

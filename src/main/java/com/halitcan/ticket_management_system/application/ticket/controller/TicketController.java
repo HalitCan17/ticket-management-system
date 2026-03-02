@@ -80,4 +80,27 @@ public class TicketController {
 
         return ResponseEntity.ok(ApiResponse.ok(updatedTicket));
     }
+
+    @GetMapping("/pool")
+    @Operation(summary = "Genel Havuzu Listele", description = "Sistemdeki kimseye atanmamış (sahipsiz) ve NEW statüsündeki biletleri listeler.")
+    public ResponseEntity<ApiResponse<PaginatedData<TicketResponse>>> getPoolTickets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PaginatedData<TicketResponse> result = ticketServiceImpl.listPoolTickets(page, size);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+
+    }
+    @PatchMapping("/{publicId}/claim")
+    @Operation(summary = "Bileti Sahiplen (Claim)", description = "Havuzdaki sahipsiz bir bileti destek personelinin üzerine almasını sağlar ve statüsünü IN_PROGRESS yapar.")
+    public ResponseEntity<ApiResponse<TicketResponse>> claimTicket(
+            @PathVariable UUID publicId,
+            @RequestParam UUID assigneeId) {
+
+        // TODO (Faz 3 - Keycloak Entegrasyonu): assigneeId parametresi @RequestParam ile dışarıdan alınmamalı.
+        // Güvenlik eklendiğinde bu ID, SecurityContext üzerinden giriş yapmış kullanıcının JWT token'ından (Principal) çıkarılacak.
+
+        TicketResponse claimedTicket = ticketServiceImpl.claimTicket(publicId, assigneeId);
+        return ResponseEntity.ok(ApiResponse.ok(claimedTicket));
+    }
 }

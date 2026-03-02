@@ -1,0 +1,1 @@
+CREATE INDEX idx_tickets_pool ON tickets (status) WHERE assignee_id IS NULL;
