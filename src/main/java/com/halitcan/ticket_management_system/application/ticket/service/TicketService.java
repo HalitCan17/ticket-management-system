@@ -24,4 +24,6 @@ public interface TicketService {
     PaginatedData<TicketResponse> listPoolTickets(int page, int size);
 
     TicketResponse claimTicket(UUID publicId, UUID assigneeId);
+
+    TicketResponse resolveTicket(UUID publicId, UUID agentId);
 }

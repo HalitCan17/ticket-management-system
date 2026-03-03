@@ -103,4 +103,16 @@ public class TicketController {
         TicketResponse claimedTicket = ticketServiceImpl.claimTicket(publicId, assigneeId);
         return ResponseEntity.ok(ApiResponse.ok(claimedTicket));
     }
+
+    @PatchMapping("/{publicId}/resolve")
+    @Operation(summary = "Bileti Çöz (Resolve)", description = "İşlemdeki bir bileti çözüldü olarak işaretler ve SLA kontrolü yapar.")
+    public ResponseEntity<ApiResponse<TicketResponse>> resolveTicket(
+            @PathVariable UUID publicId,
+            @RequestParam UUID agentId) {
+
+        // TODO (Faz 3 - Keycloak): agentId parametresi @RequestParam yerine SecurityContext (JWT) üzerinden alınacak.
+
+        TicketResponse resolvedTicket = ticketServiceImpl.resolveTicket(publicId, agentId);
+        return ResponseEntity.ok(ApiResponse.ok(resolvedTicket));
+    }
 }
