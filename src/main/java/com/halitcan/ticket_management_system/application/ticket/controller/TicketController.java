@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ public class TicketController {
 
     @PostMapping
     @Operation(summary = "Yeni Bilet Oluştur", description = "Sisteme yeni bir destek bileti kaydeder.")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'AGENT', 'TEAM_MANAGER')")
     public ResponseEntity<ApiResponse<TicketResponse>> create(
             @Valid @RequestBody CreateTicketRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -44,6 +46,7 @@ public class TicketController {
 
     @GetMapping("/{publicId}")
     @Operation(summary = "Bilet Detayı Getir", description = "Verilen benzersiz ID'ye (UUID) göre biletin detaylarını getirir.")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'AGENT', 'TEAM_MANAGER', 'ADMIN')")
     public ResponseEntity<ApiResponse<TicketResponse>> getByPublicId(@PathVariable UUID publicId) {
         TicketResponse ticket = ticketServiceImpl.getByPublicId(publicId);
         return ResponseEntity.ok(ApiResponse.ok(ticket));
@@ -51,6 +54,7 @@ public class TicketController {
 
     @GetMapping
     @Operation(summary = "Tüm Biletleri Listele", description = "Sistemdeki tüm biletleri sayfalama ve filtreleme destekli olarak listeler. (Sadece Yetkililer)")
+    @PreAuthorize("hasAnyRole('TEAM_MANAGER', 'ADMIN')")
     public ResponseEntity<ApiResponse<PaginatedData<TicketResponse>>> listTickets(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -63,6 +67,7 @@ public class TicketController {
 
     @GetMapping("/my")
     @Operation(summary = "Kendi Biletlerimi Listele", description = "Sisteme giriş yapmış müşterinin kendi oluşturduğu biletleri listeler.")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'AGENT', 'TEAM_MANAGER')")
     public ResponseEntity<ApiResponse<PaginatedData<TicketResponse>>> getMyTickets(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "0") int page,
@@ -92,6 +97,7 @@ public class TicketController {
 
     @GetMapping("/pool")
     @Operation(summary = "Genel Havuzu Listele", description = "Sistemdeki kimseye atanmamış (sahipsiz) ve NEW statüsündeki biletleri listeler.")
+    @PreAuthorize("hasAnyRole('AGENT', 'TEAM_MANAGER')")
     public ResponseEntity<ApiResponse<PaginatedData<TicketResponse>>> getPoolTickets(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -102,6 +108,7 @@ public class TicketController {
 
     @PatchMapping("/{publicId}/claim")
     @Operation(summary = "Bileti Sahiplen (Claim)", description = "Havuzdaki sahipsiz bir bileti destek personelinin üzerine almasını sağlar ve statüsünü IN_PROGRESS yapar.")
+    @PreAuthorize("hasAnyRole('AGENT', 'TEAM_MANAGER')")
     public ResponseEntity<ApiResponse<TicketResponse>> claimTicket(
             @PathVariable UUID publicId,
             @AuthenticationPrincipal Jwt jwt) {
@@ -113,6 +120,7 @@ public class TicketController {
 
     @PatchMapping("/{publicId}/resolve")
     @Operation(summary = "Bileti Çöz (Resolve)", description = "İşlemdeki bir bileti çözüldü olarak işaretler ve SLA kontrolü yapar.")
+    @PreAuthorize("hasAnyRole('AGENT', 'TEAM_MANAGER')")
     public ResponseEntity<ApiResponse<TicketResponse>> resolveTicket(
             @PathVariable UUID publicId,
             @AuthenticationPrincipal Jwt jwt) {
