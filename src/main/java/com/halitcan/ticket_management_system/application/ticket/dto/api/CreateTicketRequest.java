@@ -7,8 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record CreateTicketRequest(
-        @NotNull(message = "Bileti açan kullanıcı ID'si boş olamaz.")
-        UUID requesterId,
+
         @NotNull(message = "Biletin hangi ürün/modül için açıldığı belirtilmelidir.")
         UUID productId,
         @NotBlank(message = "Başlık boş bırakılamaz.")

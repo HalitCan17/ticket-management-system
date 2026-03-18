@@ -12,6 +12,28 @@ services:
       - "5433:5432"
     volumes:
       - ticket_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketuser -d ticketdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: ticket_keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://Postgres:5432/ticketdb?currentSchema=keycloak
+      - KC_DB_USERNAME=ticketuser
+      - KC_DB_PASSWORD=ticketpass
+    command: start-dev
+    ports:
+      - "8081:8080"
+    depends_on:
+      Postgres:
+        condition: service_healthy
 
   backend:
     build: .
@@ -24,8 +46,16 @@ services:
       - SPRING_DATASOURCE_PASSWORD=ticketpass
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_FLYWAY_ENABLED=true
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8081/realms/ticket-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/ticket-realm/protocol/openid-connect/certs
     depends_on:
-      - Postgres
+      Postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    volumes:
+      - ticket_uploads:/app/uploads/tickets
 
 volumes:
   ticket_pg_data:
+  ticket_uploads:

@@ -60,49 +60,49 @@
 
         <!-- SECURITY -->
 
-        <!--        <dependency>-->
+                <dependency>
 
-        <!--            <groupId>org.springframework.boot</groupId>-->
+                    <groupId>org.springframework.boot</groupId>
 
-        <!--            <artifactId>spring-boot-starter-security</artifactId>-->
+                    <artifactId>spring-boot-starter-security</artifactId>
 
-        <!--            <exclusions>-->
+                    <exclusions>
 
-        <!--                <exclusion>-->
+                        <exclusion>
 
-        <!--                    <groupId>org.springframework.boot</groupId>-->
+                            <groupId>org.springframework.boot</groupId>
 
-        <!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
+                            <artifactId>spring-boot-starter-logging</artifactId>
 
-        <!--                </exclusion>-->
+                        </exclusion>
 
-        <!--            </exclusions>-->
+                    </exclusions>
 
-        <!--        </dependency>-->
+               </dependency>
 
 
 
-        <!--        &lt;!&ndash; OAUTH2 &ndash;&gt;-->
+        <!--OAUTH2-->
 
-        <!--        <dependency>-->
+               <dependency>
 
-        <!--            <groupId>org.springframework.boot</groupId>-->
+                    <groupId>org.springframework.boot</groupId>
 
-        <!--            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>-->
+                     <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
 
-        <!--            <exclusions>-->
+                    <exclusions>
 
-        <!--                <exclusion>-->
+                        <exclusion>
 
-        <!--                    <groupId>org.springframework.boot</groupId>-->
+                            <groupId>org.springframework.boot</groupId>
 
-        <!--                    <artifactId>spring-boot-starter-logging</artifactId>-->
+                            <artifactId>spring-boot-starter-logging</artifactId>
 
-        <!--                </exclusion>-->
+                        </exclusion>
 
-        <!--            </exclusions>-->
+                    </exclusions>
 
-        <!--        </dependency>-->
+                </dependency>
 
         <!-- VALIDATION -->
         <dependency>

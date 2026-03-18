@@ -42,11 +42,11 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public TicketResponse create(CreateTicketRequest request) {
+    public TicketResponse create(CreateTicketRequest request, UUID requesterId) {
         TicketPriority priority = request.priority() != null ? request.priority() : TicketPriority.LOW;
 
         TicketEntity created = createTicket(
-                request.requesterId(),
+                requesterId,
                 request.productId(),
                 request.title(),
                 request.description(),

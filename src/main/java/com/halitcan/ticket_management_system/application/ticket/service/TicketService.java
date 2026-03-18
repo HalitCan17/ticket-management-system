@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface TicketService {
 
-    TicketResponse create(CreateTicketRequest request);
+    TicketResponse create(CreateTicketRequest request, UUID requesterId);
 
     TicketResponse getByPublicId(UUID publicId);
 

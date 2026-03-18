@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -28,8 +30,15 @@ public class TicketController {
 
     @PostMapping
     @Operation(summary = "Yeni Bilet Oluştur", description = "Sisteme yeni bir destek bileti kaydeder.")
-    public ResponseEntity<ApiResponse<TicketResponse>> create(@Valid @RequestBody CreateTicketRequest request) {
-        TicketResponse created = ticketServiceImpl.create(request);
+    public ResponseEntity<ApiResponse<TicketResponse>> create(
+            @Valid @RequestBody CreateTicketRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+
+        UUID requesterId = UUID.fromString(jwt.getSubject());
+
+
+        TicketResponse created = ticketServiceImpl.create(request, requesterId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(created));
     }
 
@@ -55,13 +64,13 @@ public class TicketController {
     @GetMapping("/my")
     @Operation(summary = "Kendi Biletlerimi Listele", description = "Sisteme giriş yapmış müşterinin kendi oluşturduğu biletleri listeler.")
     public ResponseEntity<ApiResponse<PaginatedData<TicketResponse>>> getMyTickets(
-            @RequestParam UUID requesterId,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus status,
             @RequestParam(required = false) com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority priority
     ) {
-
+        UUID requesterId = UUID.fromString(jwt.getSubject());
         PaginatedData<TicketResponse> result = ticketServiceImpl.listMyTickets(requesterId, page, size, status, priority);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
@@ -89,17 +98,15 @@ public class TicketController {
     ) {
         PaginatedData<TicketResponse> result = ticketServiceImpl.listPoolTickets(page, size);
         return ResponseEntity.ok(ApiResponse.ok(result));
-
     }
+
     @PatchMapping("/{publicId}/claim")
     @Operation(summary = "Bileti Sahiplen (Claim)", description = "Havuzdaki sahipsiz bir bileti destek personelinin üzerine almasını sağlar ve statüsünü IN_PROGRESS yapar.")
     public ResponseEntity<ApiResponse<TicketResponse>> claimTicket(
             @PathVariable UUID publicId,
-            @RequestParam UUID assigneeId) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        // TODO (Faz 3 - Keycloak Entegrasyonu): assigneeId parametresi @RequestParam ile dışarıdan alınmamalı.
-        // Güvenlik eklendiğinde bu ID, SecurityContext üzerinden giriş yapmış kullanıcının JWT token'ından (Principal) çıkarılacak.
-
+        UUID assigneeId = UUID.fromString(jwt.getSubject());
         TicketResponse claimedTicket = ticketServiceImpl.claimTicket(publicId, assigneeId);
         return ResponseEntity.ok(ApiResponse.ok(claimedTicket));
     }
@@ -108,10 +115,9 @@ public class TicketController {
     @Operation(summary = "Bileti Çöz (Resolve)", description = "İşlemdeki bir bileti çözüldü olarak işaretler ve SLA kontrolü yapar.")
     public ResponseEntity<ApiResponse<TicketResponse>> resolveTicket(
             @PathVariable UUID publicId,
-            @RequestParam UUID agentId) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        // TODO (Faz 3 - Keycloak): agentId parametresi @RequestParam yerine SecurityContext (JWT) üzerinden alınacak.
-
+        UUID agentId = UUID.fromString(jwt.getSubject());
         TicketResponse resolvedTicket = ticketServiceImpl.resolveTicket(publicId, agentId);
         return ResponseEntity.ok(ApiResponse.ok(resolvedTicket));
     }
