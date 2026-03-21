@@ -2,18 +2,18 @@
 <Configuration status="WARN">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <JsonLayout
-                    compact="true"
-                    eventEol="true"
-                    properties="true"
-                    stacktraceAsString="true"
-                    includeTimeMillis="true"/>
+            <JsonLayout compact="true" eventEol="true" properties="true" stacktraceAsString="true" includeTimeMillis="true"/>
         </Console>
+
+        <Kafka name="KafkaAppender" topic="ticket-logs" syncSend="false">
+            <Property name="bootstrap.servers">kafka:29092</Property>
+            <JsonLayout compact="true" eventEol="true" properties="true" stacktraceAsString="true" includeTimeMillis="true"/>
+        </Kafka>
     </Appenders>
 
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
-        </Root>
+            <AppenderRef ref="KafkaAppender"/> </Root>
     </Loggers>
 </Configuration>
