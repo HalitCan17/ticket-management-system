@@ -4,18 +4,12 @@ import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTi
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
 import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
 import com.halitcan.ticket_management_system.common.api.PaginatedData;
-import com.halitcan.ticket_management_system.domain.ticket.entity.ProductEntity;
-import com.halitcan.ticket_management_system.domain.ticket.entity.SlaPolicyEntity;
-import com.halitcan.ticket_management_system.domain.ticket.entity.TicketEntity;
-import com.halitcan.ticket_management_system.domain.ticket.entity.UserEntity;
+import com.halitcan.ticket_management_system.domain.ticket.entity.*;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
 import com.halitcan.ticket_management_system.domain.ticket.exception.InvalidTicketStateException;
 import com.halitcan.ticket_management_system.domain.ticket.exception.TicketNotFoundException;
-import com.halitcan.ticket_management_system.infrastructure.persistence.ProductRepository;
-import com.halitcan.ticket_management_system.infrastructure.persistence.SlaPolicyRepository;
-import com.halitcan.ticket_management_system.infrastructure.persistence.TicketRepository;
-import com.halitcan.ticket_management_system.infrastructure.persistence.UserRepository;
+import com.halitcan.ticket_management_system.infrastructure.persistence.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +33,7 @@ public class TicketServiceImpl implements TicketService {
     private final ProductRepository productRepository;
     private final SlaPolicyRepository slaPolicyRepository;
     private static final List<TicketStatus> POOL_STATUSES = List.of(TicketStatus.NEW, TicketStatus.IN_PROGRESS);
+    private final TicketHistoryRepository ticketHistoryRepository;
 
     @Override
     @Transactional
@@ -52,6 +47,8 @@ public class TicketServiceImpl implements TicketService {
                 request.description(),
                 priority
         );
+
+
 
         return toResponse(created);
     }
@@ -89,7 +86,11 @@ public class TicketServiceImpl implements TicketService {
         ticket.setResolutionDueAt(now.plus(slaPolicy.getResolutionTimeHours(), ChronoUnit.HOURS));
         ticket.setSlaBreached(false);
 
-        return ticketRepository.save(ticket);
+        TicketEntity savedTicket = ticketRepository.save(ticket);
+
+        recordHistory(savedTicket, null, TicketStatus.NEW, null, null);
+
+        return savedTicket;
     }
 
 
@@ -168,8 +169,14 @@ public class TicketServiceImpl implements TicketService {
             }
         }
 
+        TicketStatus oldStatus = ticket.getStatus();
+        UUID oldAssigneeId = ticket.getAssignee() != null ? ticket.getAssignee().getId() : null;
+
         ticket.setStatus(newStatus);
         TicketEntity updatedTicket = ticketRepository.save(ticket);
+
+        recordHistory(updatedTicket, oldStatus, newStatus, oldAssigneeId, assigneeId);
+
         return toResponse(updatedTicket);
     }
 
@@ -214,7 +221,11 @@ public class TicketServiceImpl implements TicketService {
             ticket.setFirstResponseAt(Instant.now());
         }
 
-        return toResponse(ticketRepository.save(ticket));
+        TicketEntity savedTicket = ticketRepository.save(ticket);
+
+        recordHistory(savedTicket, TicketStatus.NEW, TicketStatus.IN_PROGRESS, null, assigneeId);
+
+        return toResponse(savedTicket);
     }
 
     @Override
@@ -244,6 +255,34 @@ public class TicketServiceImpl implements TicketService {
             log.info("SLA BAŞARILI: Bilet {} zamanında çözüldü.", publicId);
         }
 
-        return toResponse(ticketRepository.save(ticket));
+        TicketEntity savedTicket = ticketRepository.save(ticket);
+
+        recordHistory(savedTicket, TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED, ticket.getAssignee().getId(), ticket.getAssignee().getId());
+
+        return toResponse(savedTicket);
+    }
+
+
+    private UUID getCurrentUserId() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt jwt) {
+            return UUID.fromString(jwt.getSubject());
+        }
+        throw new IllegalStateException("Sistemde aktif bir kullanıcı oturumu bulunamadı!");
+    }
+
+
+    private void recordHistory(TicketEntity ticket, TicketStatus oldStatus, TicketStatus newStatus, UUID oldAssignee, UUID newAssignee) {
+        TicketHistoryEntity history = TicketHistoryEntity.builder()
+                .ticket(ticket)
+                .oldStatus(oldStatus)
+
+
+                .newStatus(newStatus)
+                .oldAssigneeId(oldAssignee)
+                .newAssigneeId(newAssignee)
+                .changedById(getCurrentUserId())
+                .build();
+        ticketHistoryRepository.save(history);
     }
 }

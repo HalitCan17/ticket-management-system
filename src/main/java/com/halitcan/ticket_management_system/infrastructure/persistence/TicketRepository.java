@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,4 +39,9 @@ public interface TicketRepository extends JpaRepository<TicketEntity, Long> {
             @org.springframework.data.repository.query.Param("statuses") java.util.List<com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus> statuses,
             org.springframework.data.domain.Pageable pageable
     );
+
+    @Query("SELECT t FROM TicketEntity t WHERE t.status IN ('NEW', 'IN_PROGRESS') " +
+            "AND t.resolutionDueAt < :now AND t.slaBreached = false")
+    List<TicketEntity> findTicketsWithSlaBreach(@Param("now") Instant now);
+
 }
