@@ -2,8 +2,11 @@ package com.halitcan.ticket_management_system.application.ticket.service.impl;
 
 import com.halitcan.ticket_management_system.application.ticket.dto.api.CreateTicketRequest;
 import com.halitcan.ticket_management_system.application.ticket.dto.api.TicketResponse;
+import com.halitcan.ticket_management_system.application.ticket.model.WorkflowSignal;
 import com.halitcan.ticket_management_system.application.ticket.service.TicketService;
+import com.halitcan.ticket_management_system.application.ticket.service.WorkflowService;
 import com.halitcan.ticket_management_system.common.api.PaginatedData;
+import com.halitcan.ticket_management_system.common.exception.WorkflowException;
 import com.halitcan.ticket_management_system.domain.ticket.entity.*;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketPriority;
 import com.halitcan.ticket_management_system.domain.ticket.enums.TicketStatus;
@@ -34,6 +37,7 @@ public class TicketServiceImpl implements TicketService {
     private final SlaPolicyRepository slaPolicyRepository;
     private static final List<TicketStatus> POOL_STATUSES = List.of(TicketStatus.NEW, TicketStatus.IN_PROGRESS);
     private final TicketHistoryRepository ticketHistoryRepository;
+    private final WorkflowService workflowService;
 
     @Override
     @Transactional
@@ -47,8 +51,6 @@ public class TicketServiceImpl implements TicketService {
                 request.description(),
                 priority
         );
-
-
 
         return toResponse(created);
     }
@@ -86,7 +88,21 @@ public class TicketServiceImpl implements TicketService {
         ticket.setResolutionDueAt(now.plus(slaPolicy.getResolutionTimeHours(), ChronoUnit.HOURS));
         ticket.setSlaBreached(false);
 
+        // 1. Önce DB'ye kaydet
         TicketEntity savedTicket = ticketRepository.save(ticket);
+
+        // 2. jBPM Sürecini Başlat ve ID'yi kaydet (Rollback korumalı)
+        try {
+            Long instanceId = workflowService.startTicketProcess(
+                    savedTicket.getPublicId().toString(),
+                    requester.getUsername() // owner bilgisi olarak username gönderiliyor
+            );
+            savedTicket.setProcessInstanceId(instanceId);
+            // JPA Managed entity olduğu için transaction bitiminde update edilecektir.
+        } catch (Exception e) {
+            log.error("KRİTİK HATA: Bilet oluşturuldu ama jBPM başlatılamadı! İşlem geri alınıyor.");
+            throw new WorkflowException("İş akışı motoru başlatılamadı, işlem iptal edildi.", e);
+        }
 
         recordHistory(savedTicket, null, TicketStatus.NEW, null, null);
 
@@ -172,6 +188,15 @@ public class TicketServiceImpl implements TicketService {
         TicketStatus oldStatus = ticket.getStatus();
         UUID oldAssigneeId = ticket.getAssignee() != null ? ticket.getAssignee().getId() : null;
 
+        // jBPM Sinyal Gönderimi (updateTicketStatus üzerinden genel bir güncelleme yapılıyorsa)
+        // Not: Genelde claim ve resolve metodları tercih edilir ama eğer bu metod da kullanılacaksa
+        // sinyal gönderimini de entegre etmeliyiz.
+        if (newStatus == TicketStatus.IN_PROGRESS && oldStatus == TicketStatus.NEW) {
+            workflowService.signalProcess(ticket.getProcessInstanceId(), WorkflowSignal.START_PROGRESS);
+        } else if (newStatus == TicketStatus.RESOLVED && oldStatus == TicketStatus.IN_PROGRESS) {
+            workflowService.signalProcess(ticket.getProcessInstanceId(), WorkflowSignal.RESOLVE);
+        }
+
         ticket.setStatus(newStatus);
         TicketEntity updatedTicket = ticketRepository.save(ticket);
 
@@ -214,6 +239,9 @@ public class TicketServiceImpl implements TicketService {
         UserEntity assignee = userRepository.findById(assigneeId)
                 .orElseThrow(() -> new EntityNotFoundException("Personel bulunamadı: " + assigneeId));
 
+        // jBPM Sinyali: START_PROGRESS
+        workflowService.signalProcess(ticket.getProcessInstanceId(), WorkflowSignal.START_PROGRESS);
+
         ticket.setAssignee(assignee);
         ticket.setStatus(TicketStatus.IN_PROGRESS);
 
@@ -243,9 +271,11 @@ public class TicketServiceImpl implements TicketService {
                     "Bu bileti sadece üzerine alan yetkili personel çözebilir.");
         }
 
+        // jBPM Sinyali: RESOLVE
+        workflowService.signalProcess(ticket.getProcessInstanceId(), WorkflowSignal.RESOLVE);
+
         ticket.setStatus(TicketStatus.RESOLVED);
         Instant now = Instant.now();
-
 
         if (now.isAfter(ticket.getResolutionDueAt())) {
             ticket.setSlaBreached(true);
@@ -276,8 +306,6 @@ public class TicketServiceImpl implements TicketService {
         TicketHistoryEntity history = TicketHistoryEntity.builder()
                 .ticket(ticket)
                 .oldStatus(oldStatus)
-
-
                 .newStatus(newStatus)
                 .oldAssigneeId(oldAssignee)
                 .newAssigneeId(newAssignee)

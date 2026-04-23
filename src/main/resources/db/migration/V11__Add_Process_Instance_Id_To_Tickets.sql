@@ -1,0 +1,1 @@
+ALTER TABLE tickets ADD COLUMN process_instance_id BIGINT;

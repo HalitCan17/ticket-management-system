@@ -48,12 +48,19 @@ services:
       - SPRING_FLYWAY_ENABLED=true
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8081/realms/ticket-realm
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/ticket-realm/protocol/openid-connect/certs
+      - JBPM_SERVER_URL=http://jbpm:8080/kie-server/services/rest/server
+      - JBPM_SERVER_USER=wbadmin
+      - JBPM_SERVER_PASSWORD=wbadmin
+      - JBPM_CONTAINER_ID=ticket-management_1.0.0-SNAPSHOT
+      - JBPM_PROCESS_ID=ticket-management.ticket-process
     depends_on:
       Postgres:
         condition: service_healthy
       keycloak:
         condition: service_started
       kafka:
+        condition: service_started
+      jbpm:
         condition: service_started
     volumes:
       - ticket_uploads:/app/uploads/tickets
@@ -112,6 +119,17 @@ services:
     depends_on:
       - kafka
       - opensearch
+    restart: unless-stopped
+
+  jbpm:
+    image: jboss/jbpm-server-full:7.59.0.Final
+    container_name: ticket_jbpm
+    ports:
+      - "8082:8080"
+      - "8001:8001"
+    environment:
+      - KIE_SERVER_USER=wbadmin
+      - KIE_SERVER_PASSWORD=wbadmin
     restart: unless-stopped
 
 volumes:

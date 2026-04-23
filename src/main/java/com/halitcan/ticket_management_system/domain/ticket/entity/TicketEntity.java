@@ -85,5 +85,8 @@ public class TicketEntity {
     @JoinColumn(name = "product_id")
     private ProductEntity product;
 
+    @Column(name = "process_instance_id")
+    private Long processInstanceId;
+
 
 }
